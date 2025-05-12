@@ -1,1 +1,84 @@
 # Prazcan
+
+create database Prazcan;
+use prazcan;
+-- Tabela cliente: Armazena dados dos clientes
+CREATE TABLE cliente (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    cnpj_cliente BIGINT UNIQUE NOT NULL,
+    nome_cliente VARCHAR(255) NOT NULL,
+    endereco_cliente VARCHAR(500)
+);
+
+-- Tabela produtos: Armazena informações dos produtos
+CREATE TABLE produtos (
+    id_produtos INT AUTO_INCREMENT PRIMARY KEY, -- Nova chave primária
+    ref_produto VARCHAR(6) UNIQUE,              -- Código único do produto
+    nome_produto VARCHAR(255) NOT NULL,
+    valor_compra DECIMAL(10,2) NOT NULL,
+    valor_venda DECIMAL(10,2) NOT NULL,
+    CONSTRAINT chk_valor_venda CHECK (valor_venda >= valor_compra)
+);
+
+-- Tabela estoque: Armazena informações de estoque dos produtos
+CREATE TABLE estoque (
+    id_estoque INT AUTO_INCREMENT PRIMARY KEY,
+    qnt_produto INT NOT NULL,
+    ref_produto VARCHAR(6) NOT NULL, -- Agora é VARCHAR(6), igual a produtos.ref_produto
+    CONSTRAINT FK_estoque_ref_produto FOREIGN KEY (ref_produto)
+        REFERENCES produtos (ref_produto) ON DELETE CASCADE
+);
+
+-- Tabela vendedor: Armazena dados dos vendedores
+CREATE TABLE vendedor (
+    cod_vendedor INT AUTO_INCREMENT PRIMARY KEY,
+    nome_vend VARCHAR(255) NOT NULL,
+    senha_vend VARCHAR(255) NOT NULL
+);
+
+-- Tabela venda_atual: Armazena informações sobre vendas em andamento
+CREATE TABLE venda_atual (
+    id_venda_atual INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    qnt_prateleira INT NOT NULL,
+    sugestao_venda INT,
+    valor_total DECIMAL(10,2) NOT NULL,
+    CONSTRAINT FK_venda_atual_cliente FOREIGN KEY (id_cliente)
+        REFERENCES cliente (id_cliente) ON DELETE CASCADE
+);
+
+-- Tabela venda_anterior: Armazena informações sobre vendas passadas
+CREATE TABLE venda_anterior (
+    id_venda_anterior INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    produtos_anterior INT,
+    CONSTRAINT FK_venda_anterior_cliente FOREIGN KEY (id_cliente)
+        REFERENCES cliente (id_cliente) ON DELETE CASCADE
+);
+
+-- Tabela cliente_venda_atual: Relaciona clientes com vendas atuais e produtos
+CREATE TABLE cliente_venda_atual (
+    id_cliente_venda_atual INT AUTO_INCREMENT PRIMARY KEY,
+    id_venda_atual INT NOT NULL,
+    id_cliente INT NOT NULL,
+    ref_produto VARCHAR(6) NOT NULL,
+    quantidade INT NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    CONSTRAINT FK_cliente_venda_atual_venda FOREIGN KEY (id_venda_atual)
+        REFERENCES venda_atual (id_venda_atual) ON DELETE CASCADE,
+    CONSTRAINT FK_cliente_venda_atual_cliente FOREIGN KEY (id_cliente)
+        REFERENCES cliente (id_cliente) ON DELETE CASCADE,
+    CONSTRAINT FK_cliente_venda_atual_produto FOREIGN KEY (ref_produto)
+        REFERENCES produtos (ref_produto) ON DELETE CASCADE
+);
+
+-- Tabela venda_ant_atual: Relaciona vendas anteriores e atuais
+CREATE TABLE venda_ant_atual (
+    id_ant_atual INT AUTO_INCREMENT PRIMARY KEY,
+    fk_cliente_id_cliente INT NOT NULL,
+    id_venda_atual INT NOT NULL,
+    CONSTRAINT FK_venda_ant_atual_cliente FOREIGN KEY (fk_cliente_id_cliente)
+        REFERENCES cliente (id_cliente) ON DELETE CASCADE,
+    CONSTRAINT FK_venda_ant_atual_venda FOREIGN KEY (id_venda_atual)
+        REFERENCES venda_atual (id_venda_atual) ON DELETE CASCADE
+);
